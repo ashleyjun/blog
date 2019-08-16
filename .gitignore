@@ -4,6 +4,7 @@
 /.metadata/
 HELP.md
 target/
+/WebContent/static/images
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**
 !**/src/test/**

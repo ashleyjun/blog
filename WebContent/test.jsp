@@ -7,7 +7,8 @@
 <title>这是我的第一个网页</title>
 </head>
 <body>
-
+<!-- EL表达式 -->
+Welcome, ${username} 
 <table>
 	<tr>
 		<th>ID</th>
