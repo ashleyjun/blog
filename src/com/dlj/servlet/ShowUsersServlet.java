@@ -3,7 +3,12 @@ package com.dlj.servlet;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import javax.activation.MailcapCommandMap;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -13,21 +18,22 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.dlj.entity.User;
 import com.dlj.utils.DBUtil;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.Statement;
 
 /**
- * Servlet implementation class SigninServlet
+ * Servlet implementation class showUsersServlet
  */
-@WebServlet("/SigninServlet")
-public class SigninServlet extends HttpServlet {
+@WebServlet("/showUsers")
+public class ShowUsersServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
        
     /**
      * @see HttpServlet#HttpServlet()
      */
-    public SigninServlet() {
+    public ShowUsersServlet() {
         super();
         // TODO Auto-generated constructor stub
     }
@@ -37,33 +43,15 @@ public class SigninServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
-
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		String username = request.getParameter("username");
-		String password = request.getParameter("password");
-		
-		boolean error = false;
-		String errorMsg = " ";
-		if (StringUtils.isEmpty(username)) {
-			error = true;
-			errorMsg = "用户名不允许为空";
-		} else if (StringUtils.isEmpty(password)) {
-			error = true;
-			errorMsg = "密码不允许为空";
-		}
-		if (error) {
-			request.setAttribute("errorMsg", errorMsg);
+		String username = (String)request.getSession().getAttribute("username");
+		if(StringUtils.isBlank(username)) {
+			request.setAttribute("errorMsg", "请先登录");
 			RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
 			dispatcher.forward(request, response);
 			return;
 		}
-		
+//		request.setAttribute("username", username);
+		request.getSession().setAttribute("key", "Hello world");
 		
 		Connection connection = null;
 		Statement statement = null;
@@ -72,23 +60,41 @@ public class SigninServlet extends HttpServlet {
 			statement = (Statement) connection.createStatement();
 			// 准备sql语句
 			// 注意： 字符串要用单引号'
-			String sql = "select * from t_user where username = '"+username+"' and password = '"+password+"'";
+			String sql = "SELECT * FROM t_user";
 			System.out.println(sql);
 			// 在statement中使用字符串拼接的方式，这种方式存在诸多问题
-			ResultSet resultSet =  statement.executeQuery(sql);
-			resultSet.last();
-			int rowCount = resultSet.getRow();
-			if (rowCount <= 0) {
-				request.setAttribute("errorMsg", "用户名或密码错误");
-				RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-				dispatcher.forward(request, response);
-				return;
+			ResultSet resultSet = statement.executeQuery(sql);
+			List<User> userList = new ArrayList<User>();
+			while (resultSet.next()) {
+				User user = new User();
+				user.setId(resultSet.getLong("id"));
+				user.setEmail(resultSet.getString("email"));
+				user.setPhoneNumber(resultSet.getString("phone_number"));
+				user.setUsername(resultSet.getString("username"));
+				user.setNickname(resultSet.getString("nickname"));
+				user.setPassword(resultSet.getString("password"));
+				user.setCreateTime(resultSet.getTimestamp("create_time"));
+				user.setUpdateTime(resultSet.getTimestamp("update_time"));
+				userList.add(user);
 			}
-			request.getSession().setAttribute("username", username);
-			request.setAttribute("msg", "登陆成功");
-			RequestDispatcher dispatcher = request.getRequestDispatcher("success.jsp");
+			request.setAttribute("userList", userList);
+			
+			Map<String, String> userMap = new HashMap<String, String>();
+			for(int i = 0; i < userList.size();i++){
+				User  user = userList.get(i);
+				userMap.put(user.getUsername(), user.getEmail());
+			}
+			
+			System.out.println(userMap.get("aa"));
+			
+			request.setAttribute("userMap", userMap);
+//			request.setAttribute("userMap", null);
+
+			
+			RequestDispatcher dispatcher = request.getRequestDispatcher("userList.jsp");
 			dispatcher.forward(request, response);
 			return;
+		
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
@@ -110,10 +116,18 @@ public class SigninServlet extends HttpServlet {
 				}
 			}
 		}
-
 		request.setAttribute("errorMsg", "系统异常");
 		RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
 		dispatcher.forward(request, response);
+//		response.getWriter().append("Served at: ").append(request.getContextPath());
+	}
+
+	/**
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		// TODO Auto-generated method stub
+		doGet(request, response);
 	}
 
 }
