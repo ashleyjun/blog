@@ -2,6 +2,8 @@ package com.dlj.entity;
 
 import java.util.Date;
 
+import com.dlj.utils.Count;
+
 public class User {
 	private long id;
 	private String email;
@@ -75,6 +77,4 @@ public class User {
 	public void setUpdateTime(Date updateTime) {
 		this.updateTime = updateTime;
 	}
-	
-
 }

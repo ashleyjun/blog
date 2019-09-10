@@ -72,7 +72,7 @@ public class RegisterServlet extends HttpServlet {
 
 		if (isFlag) {
 			request.setAttribute("errorMsg", errorMsg);
-			RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 			dispatcher.forward(request, response);
 			return;
 		}
@@ -94,26 +94,11 @@ public class RegisterServlet extends HttpServlet {
 			// TODO: handle exception
 			e.printStackTrace();
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			DBUtil.close(connection, statement,null);
 		}
 
 		request.setAttribute("username", username);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("success.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/success.jsp");
 		dispatcher.forward(request, response);
 	}
 

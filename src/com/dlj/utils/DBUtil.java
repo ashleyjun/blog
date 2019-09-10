@@ -2,7 +2,11 @@ package com.dlj.utils;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+
+import com.mysql.jdbc.Statement;
 
 public class DBUtil { 
 	/**
@@ -22,7 +26,69 @@ public class DBUtil {
 			e.printStackTrace();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 		return conn;
 	}
+	
+	public static void close(Connection connection, Statement statement, ResultSet resultSet) {
+		close(resultSet);
+		close(statement);
+		close(connection);
+	}
+	
+	public static void close(Connection connection, PreparedStatement preparedStatement, ResultSet resultSet) {
+		close(resultSet);
+		close(preparedStatement);
+		close(connection);
+	}
+
+	
+	public static void close(ResultSet resultSet) {
+		if (resultSet != null) {
+			try {
+				resultSet.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+		
+	}
+	public static void close(Connection connection) {
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+		
+	}
+	
+	public static void close(Statement statement) {
+		if (statement != null) {
+			try {
+				statement.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+		
+	}
+	public static void close(PreparedStatement preparedStatement) {
+		if (preparedStatement != null) {
+			try {
+				preparedStatement.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}	
+		
+	}
+	
 }

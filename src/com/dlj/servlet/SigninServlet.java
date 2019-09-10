@@ -1,9 +1,8 @@
 package com.dlj.servlet;
 
 import java.io.IOException;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
-
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -15,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.dlj.utils.DBUtil;
 import com.mysql.jdbc.Connection;
-import com.mysql.jdbc.Statement;
 
 /**
  * Servlet implementation class SigninServlet
@@ -37,7 +35,9 @@ public class SigninServlet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+//		response.getWriter().append("Served at: ").append(request.getContextPath());
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/signin.jsp");
+		dispatcher.forward(request, response);
 	}
 
 	/**
@@ -59,60 +59,53 @@ public class SigninServlet extends HttpServlet {
 		}
 		if (error) {
 			request.setAttribute("errorMsg", errorMsg);
-			RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 			dispatcher.forward(request, response);
 			return;
 		}
 		
 		
 		Connection connection = null;
-		Statement statement = null;
+//		Statement statement = null;
+		PreparedStatement preparedStatement = null;
+		ResultSet resultSet = null;
 		try {
 			connection = (Connection) DBUtil.getConnection();
-			statement = (Statement) connection.createStatement();
+//			statement = (Statement) connection.createStatement();
+//			String sql = "select * from t_user where username = '"+username+"' and password = '"+password+"'";
+			preparedStatement = connection.prepareStatement("select * from t_user where username = ? and password = ?");
+//			preparedStatement = connection.prepareStatement();
+			preparedStatement.setString(1, username);
+			preparedStatement.setString(2, password);
 			// 准备sql语句
 			// 注意： 字符串要用单引号'
-			String sql = "select * from t_user where username = '"+username+"' and password = '"+password+"'";
-			System.out.println(sql);
+
+//			System.out.println(sql);
 			// 在statement中使用字符串拼接的方式，这种方式存在诸多问题
-			ResultSet resultSet =  statement.executeQuery(sql);
+			resultSet =  preparedStatement.executeQuery();
+			System.out.println("sql=" + preparedStatement.toString());//打印SQL
 			resultSet.last();
 			int rowCount = resultSet.getRow();
 			if (rowCount <= 0) {
 				request.setAttribute("errorMsg", "用户名或密码错误");
-				RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+				RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 				dispatcher.forward(request, response);
 				return;
 			}
 			request.getSession().setAttribute("username", username);
 			request.setAttribute("msg", "登陆成功");
-			RequestDispatcher dispatcher = request.getRequestDispatcher("success.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/success.jsp");
 			dispatcher.forward(request, response);
 			return;
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			DBUtil.close(connection, preparedStatement, resultSet);
 		}
-
+		
 		request.setAttribute("errorMsg", "系统异常");
-		RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 		dispatcher.forward(request, response);
 	}
 

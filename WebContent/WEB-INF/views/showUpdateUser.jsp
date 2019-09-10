@@ -23,7 +23,7 @@
 	</tr>
 	<tr>
 		<td>用户名</td>
-		<td><input name="username" value="${user.username}"  type="text"/></td>
+		<td><input name="username" value="${user.username}" readonly  type="text"/></td>
 	</tr>
 	<tr>
 		<td>昵称</td>

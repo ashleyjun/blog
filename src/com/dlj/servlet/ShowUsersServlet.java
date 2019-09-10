@@ -19,6 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 
 import com.dlj.entity.User;
+import com.dlj.utils.Count;
 import com.dlj.utils.DBUtil;
 import com.mysql.jdbc.Connection;
 import com.mysql.jdbc.Statement;
@@ -29,41 +30,48 @@ import com.mysql.jdbc.Statement;
 @WebServlet("/showUsers")
 public class ShowUsersServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
-    public ShowUsersServlet() {
-        super();
-        // TODO Auto-generated constructor stub
-    }
 
 	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#HttpServlet()
 	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	public ShowUsersServlet() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
+	 *      response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		String username = (String)request.getSession().getAttribute("username");
-		if(StringUtils.isBlank(username)) {
-			request.setAttribute("errorMsg", "请先登录");
-			RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
-			dispatcher.forward(request, response);
-			return;
-		}
+
 //		request.setAttribute("username", username);
-		request.getSession().setAttribute("key", "Hello world");
+//		request.getSession().setAttribute("key", "Hello world");
+		int pageSize = 5;
+		String pString = request.getParameter("pageNum");
+		int pageNum = 1;
+		if (!StringUtils.isBlank(pString)) {
+			pageNum = Integer.valueOf(pString);
+		}
+		request.setAttribute("pageNum", pageNum);
 		
+		int offset = pageSize * (pageNum - 1);
+
 		Connection connection = null;
 		Statement statement = null;
+		ResultSet resultSet = null;
+		ResultSet totalCountResultSet = null;
 		try {
 			connection = (Connection) DBUtil.getConnection();
 			statement = (Statement) connection.createStatement();
 			// 准备sql语句
 			// 注意： 字符串要用单引号'
-			String sql = "SELECT * FROM t_user";
+			String sql = "SELECT * FROM t_user order by id desc limit " + offset + "," + pageSize;
 			System.out.println(sql);
 			// 在statement中使用字符串拼接的方式，这种方式存在诸多问题
-			ResultSet resultSet = statement.executeQuery(sql);
+			resultSet = statement.executeQuery(sql);
 			List<User> userList = new ArrayList<User>();
 			while (resultSet.next()) {
 				User user = new User();
@@ -78,54 +86,50 @@ public class ShowUsersServlet extends HttpServlet {
 				userList.add(user);
 			}
 			request.setAttribute("userList", userList);
-			
+
+			int totalCount = 0;
+			totalCountResultSet = statement.executeQuery("select count(*) as totalCount from t_user ");
+			if (totalCountResultSet.next()) {
+				totalCount = totalCountResultSet.getInt("totalCount");
+			}
+			request.setAttribute("totalCount", totalCount);
+
 			Map<String, String> userMap = new HashMap<String, String>();
-			for(int i = 0; i < userList.size();i++){
-				User  user = userList.get(i);
+			for (int i = 0; i < userList.size(); i++) {
+				User user = userList.get(i);
 				userMap.put(user.getUsername(), user.getEmail());
 			}
-			
+
 			System.out.println(userMap.get("aa"));
-			
+
 			request.setAttribute("userMap", userMap);
 //			request.setAttribute("userMap", null);
 
-			
-			RequestDispatcher dispatcher = request.getRequestDispatcher("userList.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/userList.jsp");
 			dispatcher.forward(request, response);
 			return;
-		
+
 		} catch (Exception e) {
 			// TODO: handle exception
 			e.printStackTrace();
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+
+			DBUtil.close(totalCountResultSet);
+			DBUtil.close(connection, statement, resultSet);
+
 		}
 		request.setAttribute("errorMsg", "系统异常");
-		RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 		dispatcher.forward(request, response);
 //		response.getWriter().append("Served at: ").append(request.getContextPath());
 	}
 
 	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
+	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse
+	 *      response)
 	 */
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		doGet(request, response);
 	}

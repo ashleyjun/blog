@@ -59,26 +59,11 @@ public class DeleteUserServlet extends HttpServlet {
 			e.printStackTrace();
 			errorMsg = e.getMessage();
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			DBUtil.close(connection, statement, null);
 		}
 
 		request.setAttribute("errorMsg", errorMsg);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 		dispatcher.forward(request, response);
 	}
 

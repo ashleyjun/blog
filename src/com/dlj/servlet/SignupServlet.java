@@ -39,7 +39,9 @@ public class SignupServlet extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
+//		response.getWriter().append("Served at: ").append(request.getContextPath());
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/signup.jsp");
+		dispatcher.forward(request, response);
 	}
 
 	/**
@@ -62,7 +64,7 @@ public class SignupServlet extends HttpServlet {
 		if (StringUtils.isEmpty(email)) {
 			error = true;
 			errorMsg = "邮箱不允许为空";
-		}else if (StringUtils.isEmpty(password)) {
+		} else if (StringUtils.isEmpty(password)) {
 			error = true;
 			errorMsg = "密码不允许为空";
 		} else if (!StringUtils.equals(password, confirmPassword)) {
@@ -82,16 +84,16 @@ public class SignupServlet extends HttpServlet {
 
 		if (error) {
 			request.setAttribute("errorMsg", errorMsg);
-			RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 			dispatcher.forward(request, response);
 			return;
 		}
 
 		Connection connection = null;
-		Statement statement=null;
+		Statement statement = null;
 		try {
-			 connection = (Connection) DBUtil.getConnection();
-			 statement = (Statement) connection.createStatement();
+			connection = (Connection) DBUtil.getConnection();
+			statement = (Statement) connection.createStatement();
 			// 准备sql语句
 			// 注意： 字符串要用单引号'
 			String sql = "insert into t_user(email, phone_number, username, nickname, password, create_time, update_time) values('"
@@ -106,26 +108,11 @@ public class SignupServlet extends HttpServlet {
 			e.printStackTrace();
 			errorMsg = e.getMessage();
 		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-			if (statement != null) {
-				try {
-					statement.close();
-				} catch (SQLException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			DBUtil.close(connection, statement, null);
 		}
 
 		request.setAttribute("errorMsg", errorMsg);
-		RequestDispatcher dispatcher = request.getRequestDispatcher("error.jsp");
+		RequestDispatcher dispatcher = request.getRequestDispatcher("/WEB-INF/views/error.jsp");
 		dispatcher.forward(request, response);
 	}
 
